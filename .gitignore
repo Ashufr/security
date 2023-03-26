@@ -13,9 +13,7 @@ node_modules/
 # production
 /build
 
-GDSCWork
-/GDSCWork
-./GDSCWork
+.env
 
 # misc
 .DS_Store
