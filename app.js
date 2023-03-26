@@ -2,6 +2,7 @@ import express from 'express';
 import bodyParser from 'body-parser';
 import ejs from 'ejs';
 import mongoose from 'mongoose';
+import encrypt from 'mongoose-encryption';
 
 const app = express();
 
@@ -13,10 +14,13 @@ app.use(bodyParser.urlencoded({
 
 mongoose.connect("mongodb+srv://ashu:ashu@cluster0.6u8vayi.mongodb.net/securityDB", {useNewUrlParser : true});
 
-const userSchema = {
+const userSchema = new mongoose.Schema({
     email : String,
     password : String
-}
+});
+
+const secret = "Thisismysecret";
+userSchema.plugin(encrypt, {secret: secret , encryptedFields: ["password"]});
 
 const User = new mongoose.model("User", userSchema);
 
