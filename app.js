@@ -4,8 +4,9 @@ import express from 'express';
 import bodyParser from 'body-parser';
 import ejs from 'ejs';
 import mongoose from 'mongoose';
-import md5 from 'md5'
+import bcrypt from 'bcrypt';
 
+const saltRounds = 10;
 const app = express();
 
 app.use(express.static("public"));
@@ -39,16 +40,21 @@ app.get("/login", async(req, res)=>{
 
 app.post("/register", async(req, res)=>{
 
-    const newUser = new User({
-        email : req.body.username,
-        password : md5(req.body.password)
+    bcrypt.hash(req.body.password, saltRounds, async (err, hash)=> {
+        
+        const newUser = new User({
+            email : req.body.username,
+            password : hash
+        });
+        try {
+            await newUser.save();
+            res.render("secrets");
+        } catch (error) {
+            console.log(error);
+        }
+        
     });
-    try {
-        await newUser.save();
-        res.render("secrets");
-    } catch (error) {
-        console.log(error);
-    }
+
 })
 
 app.post("/login" , async(req ,res)=>{
@@ -59,12 +65,14 @@ app.post("/login" , async(req ,res)=>{
     try {
         const foundUser = await User.findOne({email: username});
         if(foundUser){
-            if(foundUser.password === md5(password)){
-                res.render("secrets");
-            }
-            else{
-                res.send("Wrong password");
-            }
+            bcrypt.compare(password, foundUser.password, async (err, result)=> {
+                if (result){
+                    res.render("secrets");
+                }
+                else{
+                    res.send("Wrong password");
+                }
+            });
         }
         else{
             res.send("User doesn't exist");
